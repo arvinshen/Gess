@@ -38,22 +38,21 @@ class GessGame:
     just return False. Otherwise it should make the indicated move, remove any captured stones, update the game state
     if necessary, update whose turn it is, and return True.
     Feel free to add whatever other classes, methods, or data members you want. All data members must be private.
-
-    Here's a very simple example of how the class could be used:
-
-    game = GessGame()
-    move_result = game.make_move('m3', 'm6')
-    game.make_move('e14', 'g14')
-    state = game.get_game_state()
-    game.resign_game()
     """
     def __init__(self):
         """Initializes GessGame object"""
         self._game_state = "UNFINISHED"
+        self._bound_rows = 20
+        self._bound_cols = 20
+        self._rows = 22
+        self._cols = 22
+        self._board_dims = (self._bound_rows, self._bound_cols)
+        self._dims = (self._rows, self._cols)
+        self._board = self.create_board()
 
     def get_game_state(self):
         """"""
-        return
+        return self._game_state
 
     def resign_game(self):
         """"""
@@ -61,8 +60,30 @@ class GessGame:
 
     def make_move(self, curr_pos, move_pos):
         """"""
-        return
+        return False
 
-    def display_gess_game(self):
+    def display_game(self):
         """"""
-        return
+        for rows in range(self._rows):
+            print("| ", end="")
+            for cols in range(self._cols):
+                if cols == 0:
+                    print(self._board[rows][cols].rjust(2) + " | ", end="")
+                else:
+                    print(self._board[rows][cols] + " | ", end="")
+            print(self._board[self._rows-1][self._cols-1] + " |")
+
+    def create_board(self):
+        """"""
+        board = [[' ' for i in range(self._cols)] for j in range(self._rows)]
+
+        num = 1
+        for i in range(21, 1, -1):
+            board[i][0] = str(num)
+            num += 1
+
+        char = "a"
+        for i in range(2, 22):
+            board[0][i] = char
+            char = chr(ord(char) + 1)
+        return board
