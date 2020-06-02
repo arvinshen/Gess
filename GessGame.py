@@ -2,8 +2,6 @@
 # Date: 05/16/2020
 # Description: A GessGame simulator
 
-import copy
-
 class GessGame:
     """
     Remember that this project cannot be submitted late.
@@ -34,15 +32,12 @@ class GessGame:
 
     Feel free to add whatever other classes, methods, or data members you want. All data members must be private.
     """
-
     def __init__(self):
         """Initializes GessGame object"""
-        self._game_state = "UNFINISHED"  # 'UNFINISHED', 'BLACK_WON' or 'WHITE_WON'
-        self._turn_state = "BLACKS_TURN"  # 'BLACKS_TURN' OR 'WHITES_TURN'
+        self._game_state = "UNFINISHED"           # 'UNFINISHED', 'BLACK_WON' or 'WHITE_WON'
+        self._turn_state = "BLACKS_TURN"          # 'BLACKS_TURN' OR 'WHITES_TURN'
         self._bound_rows = self._bound_cols = 20  # board boundary is 20x20 from rows 2-19 and columns b-s
         self._num_rows = self._num_cols = 22
-        # self._board_dims = (self._bound_rows, self._bound_cols)
-        # self._dims = (self._rows, self._cols)
         self._blk_start_pos = (("2", "c"), ("2", "e"), ("2", "g"), ("2", "h"), ("2", "i"), ("2", "j"),
                                ("2", "k"), ("2", "l"), ("2", "m"), ("2", "n"), ("2", "p"), ("2", "r"),
                                ("3", "b"), ("3", "c"), ("3", "d"), ("3", "f"), ("3", "h"), ("3", "i"), ("3", "j"),
@@ -63,7 +58,7 @@ class GessGame:
         self._board = self.create_board()
         self._move_count = 0
         self._move_hist = {}  # a dictionary containing the history of moves (as a Move object) made in the game
-        # key is the move number (1, 2, 3, ..., n-2, n-1, n) and value is the move object
+                              # key is the move number (1, 2, 3, ..., n-2, n-1, n) and value is the move object
 
     ####################################################################################################
     # Queries
@@ -163,8 +158,6 @@ class GessGame:
         if self._game_state is "BLACK_WON" or self._game_state is "WHITE_WON":
             return False
 
-        # from_coord = (from_square[1], from_square[0])
-        # to_coord = (to_square[1], to_square[0])
         move = Move(from_square, to_square, self._board, self._turn_state, self._num_blk_pcs, self._num_wht_pcs)
         # check if move is valid
         if not move.is_valid():
@@ -249,25 +242,41 @@ class Move:
         :param num_blk_pcs: number of black pieces on the board
         :param num_wht_pcs: number of white pieces on the board
         """
-        self._from_square = from_square  # board coordinates (row, column) as a tuple of the piece to be moved
-        self._to_square = to_square  # board coordinates (row, column) as a tuple where the piece is to be moved
-        self._from_board_index = self.square_to_indices(from_square)  # from_square adjusted to correct board index
-        self._to_board_index = self.square_to_indices(to_square)  # to_square adjusted to correct board index
+        # board coordinates (row, column) as a tuple of the piece to be moved
+        self._from_square = from_square
+        self._to_square = to_square
+
+        # board coordinates adjusted to correct board index
+        self._from_board_index = self.square_to_indices(from_square)
+        self._to_board_index = self.square_to_indices(to_square)
+
+        # board dimensions
         self._playable_area = (3, 21)  # playable board index area; inclusive [3, 21) non-inclusive
         self._rows = ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20')
         self._cols = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't')
-        self._board_before = board_before
-        self._board_after = copy.deepcopy(board_before)
+
+        # board
+        self._board_before = board_before  # game layout before move
+        self._board_after = []  # game layout after move
+        for i in self._board_before:
+            self._board_after.append(list(i))
+
+        # players
         self._player = "B" if turn_state is "BLACKS_TURN" else "W"
         self._opponent = "W" if turn_state is "BLACKS_TURN" else "B"
+
+        # ring presence
         self._game_won = False
-        # self._player_won = None
         self._player_ring = False
         self._opponent_ring = False
+
+        # number of pieces
         self._num_blk_before = num_blk_pcs
         self._num_blk_after = num_blk_pcs
         self._num_wht_before = num_wht_pcs
         self._num_wht_after = num_wht_pcs
+
+        # move distance
         self._max_dist_w_center = 18
         self._max_dist_wo_center = 3
         self._dist = 0
@@ -325,57 +334,16 @@ class Move:
             elif abs(int(self._dist + 1) - self._dist) < 1 * 10 ** -12:
                 self._dist = int(self._dist + 1)
 
-        # if self._dist.is_integer() and self._dist > self._max_dist_w_center:
-        #     return False
-
+        # checks if the distance between two squares is greater than the maximum of 18 on the board.
         if self._dist > self._max_dist_w_center:
             return False
 
-        # if center square does not have a piece present, the center can only move up to 3 squares in possible directions
+        # checks if center square contains the player's piece and whether the distance is greater than 3
         if self._board_before[self._from_board_index[0]][self._from_board_index[1]] is "-" and self._dist > self._max_dist_wo_center:
             return False
 
-        # if abs(int((self._dist / (2 ** (1 / 2.0)) + 1) - self._dist) >= 1 * 10 ** -12 or abs(int(self._dist) - self._dist) >= 1 * 10 ** -12)):
-        #     return False
-        # print("Before remove")
-        # for rows in range(23):
-        #     print("| ", end="")
-        #     for cols in range(22):
-        #         if cols == 0:
-        #             print(self._board_before[rows][cols].rjust(2) + " | ", end="")
-        #         else:
-        #             print(self._board_before[rows][cols] + "   ", end="")
-        #     print(self._board_before[22 - 1][22 - 1] + " |")
-        #
-        # for rows in range(23):
-        #     print("| ", end="")
-        #     for cols in range(22):
-        #         if cols == 0:
-        #             print(self._board_after[rows][cols].rjust(2) + " | ", end="")
-        #         else:
-        #             print(self._board_after[rows][cols] + "   ", end="")
-        #     print(self._board_after[22 - 1][22 - 1] + " |")
-
-        # else only able to move up to 3 squares in possible directions
         self.remove_3x3()
-        # print("After remove")
-        # for rows in range(23):
-        #     print("| ", end="")
-        #     for cols in range(22):
-        #         if cols == 0:
-        #             print(self._board_before[rows][cols].rjust(2) + " | ", end="")
-        #         else:
-        #             print(self._board_before[rows][cols] + "   ", end="")
-        #     print(self._board_before[22 - 1][22 - 1] + " |")
-        #
-        # for rows in range(23):
-        #     print("| ", end="")
-        #     for cols in range(22):
-        #         if cols == 0:
-        #             print(self._board_after[rows][cols].rjust(2) + " | ", end="")
-        #         else:
-        #             print(self._board_after[rows][cols] + "   ", end="")
-        #     print(self._board_after[22 - 1][22 - 1] + " |")
+
         return self.check_path()
 
     def get_board_after(self):
@@ -452,21 +420,6 @@ class Move:
                     return False
         elif self._to_board_index[0] > self._from_board_index[0] and self._to_board_index[1] > self._from_board_index[1]:
             # check if SE piece is present
-            # x = self._board_before[self._from_board_index[0] + 1][self._from_board_index[1] + 1]
-            # print(x)
-            # print(self._player)
-            #
-            # for rows in range(23):
-            #     print("| ", end="")
-            #     for cols in range(22):
-            #         if cols == 0:
-            #             print(self._board_before[rows][cols].rjust(2) + " | ", end="")
-            #         else:
-            #             print(self._board_before[rows][cols] + "   ", end="")
-            #     print(self._board_before[22 - 1][22 - 1] + " |")
-            # print()
-
-
             if self._board_before[self._from_board_index[0] + 1][self._from_board_index[1] + 1] is not self._player:
                 return False
             # check SE path
@@ -483,8 +436,6 @@ class Move:
             # check S path
             for index in range(1, self._dist + 1):
                 pcs_3x3 = self.check_3x3(self._from_board_index[0] + index, self._from_board_index[1])
-                # print(self._player in pcs_3x3)
-                # print(self._opponent in pcs_3x3)
                 if index == self._dist:
                     return True
                 elif self._player in pcs_3x3 or self._opponent in pcs_3x3:
@@ -526,7 +477,7 @@ class Move:
         return True
 
     def check_3x3(self, row, col):
-        return (self._board_after[row][col],               # C
+        return (self._board_after[row][col],             # C
                    self._board_after[row - 1][col],      # N from C
                    self._board_after[row - 1][col + 1],  # NE from C
                    self._board_after[row][col + 1],      # E from C
@@ -540,6 +491,12 @@ class Move:
     # Commands
 
     def calc_dist(self, point1, point2):
+        """
+        Calculates distance between two points
+        :param point1: starting point of center square
+        :param point2: ending point of center square
+        :return: distance
+        """
         return ((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2) ** (1 / 2.0)
 
     def square_to_indices(self, square):
@@ -559,53 +516,14 @@ class Move:
         after the move
         :return: self._board_after
         """
+        # make a copy of all 1-9 pieces to be moved
         pcs_3x3 = []
         for row in range(-1, 2):
             for col in range(-1, 2):
                 pcs_3x3.append(self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col])
         pcs_3x3 = tuple(pcs_3x3)
 
-        # # make a copy of all 1-9 pieces to be moved
-        # pcs_3x3 = (self._board_after[self._from_board_index[0]][self._from_board_index[1]],          # C
-        #            self._board_after[self._from_board_index[0] - 1][self._from_board_index[1]],      # N from C
-        #            self._board_after[self._from_board_index[0] - 1][self._from_board_index[1] + 1],  # NE from C
-        #            self._board_after[self._from_board_index[0]][self._from_board_index[1] + 1],      # E from C
-        #            self._board_after[self._from_board_index[0] + 1][self._from_board_index[1] + 1],  # SE from C
-        #            self._board_after[self._from_board_index[0] + 1][self._from_board_index[1]],      # S from C
-        #            self._board_after[self._from_board_index[0] + 1][self._from_board_index[1] - 1],  # SW from C
-        #            self._board_after[self._from_board_index[0]][self._from_board_index[1] - 1],      # W from C
-        #            self._board_after[self._from_board_index[0] - 1][self._from_board_index[1] - 1])  # NW from C
-
-        # # delete current position of all pieces to be moved
-        # self._board_after[self._from_board_index[0]][self._from_board_index[1]] = "-"          # C
-        # self._board_after[self._from_board_index[0] - 1][self._from_board_index[1]] = "-"      # N from C
-        # self._board_after[self._from_board_index[0] - 1][self._from_board_index[1] + 1] = "-"  # NE from C
-        # self._board_after[self._from_board_index[0]][self._from_board_index[1] + 1] = "-"      # E from C
-        # self._board_after[self._from_board_index[0] + 1][self._from_board_index[1] + 1] = "-"  # SE from C
-        # self._board_after[self._from_board_index[0] + 1][self._from_board_index[1]] = "-"      # S from C
-        # self._board_after[self._from_board_index[0] + 1][self._from_board_index[1] - 1] = "-"  # SW from C
-        # self._board_after[self._from_board_index[0]][self._from_board_index[1] - 1] = "-"      # W from C
-        # self._board_after[self._from_board_index[0] - 1][self._from_board_index[1] - 1] = "-"  # NW from C
-
-        # for row in range(-1, 2):
-        #     for col in range(-1, 2):
-        #         if self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is "B":
-        #             self._num_blk_after -= 1
-        #         elif self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is "W":
-        #             self._num_wht_after -= 1
-        #         self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] = "-"
-
-        # # replace all pieces surrounding center coordinate where piece is to be moved to
-        # self._board_after[self._to_board_index[0]][self._to_board_index[1]] = pcs_3x3[0]          # C
-        # self._board_after[self._to_board_index[0] - 1][self._to_board_index[1]] = pcs_3x3[1]      # N from C
-        # self._board_after[self._to_board_index[0] - 1][self._to_board_index[1] + 1] = pcs_3x3[2]  # NE from C
-        # self._board_after[self._to_board_index[0]][self._to_board_index[1] + 1] = pcs_3x3[3]      # E from C
-        # self._board_after[self._to_board_index[0] + 1][self._to_board_index[1] + 1] = pcs_3x3[4]  # SE from C
-        # self._board_after[self._to_board_index[0] + 1][self._to_board_index[1]] = pcs_3x3[5]      # S from C
-        # self._board_after[self._to_board_index[0] + 1][self._to_board_index[1] - 1] = pcs_3x3[6]  # SW from C
-        # self._board_after[self._to_board_index[0]][self._to_board_index[1] - 1] = pcs_3x3[7]      # W from C
-        # self._board_after[self._to_board_index[0] - 1][self._to_board_index[1] - 1] = pcs_3x3[8]  # NW from C
-
+        # replace all pieces surrounding center coordinate where piece is to be moved to
         index = 0
         for row in range(-1, 2):
             for col in range(-1, 2):
