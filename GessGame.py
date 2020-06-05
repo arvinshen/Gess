@@ -387,11 +387,11 @@ class Move:
         """Checks validity of movement direction, then checks it's path for obstructions"""
         if self._to_board_index[0] < self._from_board_index[0] and self._to_board_index[1] == self._from_board_index[1]:
             # check if N piece present
-            if self._board_before[self._from_board_index[0]] - 1[self._from_board_index[1]] is not self._player:
+            if self._board_before[self._from_board_index[0] - 1][self._from_board_index[1]] is not self._player:
                 return False
             # check N path
             for index in range(1, self._dist + 1):
-                pcs_3x3 = self.check_3x3(self._from_board_index[0] + index, self._from_board_index[1])
+                pcs_3x3 = self.check_3x3(self._from_board_index[0] - index, self._from_board_index[1])
                 if index == self._dist:
                     return True
                 elif self._player in pcs_3x3 or self._opponent in pcs_3x3:
@@ -520,7 +520,10 @@ class Move:
         pcs_3x3 = []
         for row in range(-1, 2):
             for col in range(-1, 2):
-                pcs_3x3.append(self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col])
+                if self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col] is " ":
+                    pcs_3x3.append('-')
+                else:
+                    pcs_3x3.append(self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col])
         pcs_3x3 = tuple(pcs_3x3)
 
         # replace all pieces surrounding center coordinate where piece is to be moved to
@@ -585,4 +588,5 @@ class Move:
                     self._num_blk_after -= 1
                 elif self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is "W":
                     self._num_wht_after -= 1
-                self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] = "-"
+                if self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is not " ":
+                    self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] = "-"
