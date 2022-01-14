@@ -323,9 +323,8 @@ class Move:
 
         # board dimensions
         self._playable_area = (3, 21)  # playable board index area; inclusive [3, 21) non-inclusive
-        self._rows = (
-            '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20')
-        self._cols = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't')
+        self._rows = ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19')
+        self._cols = ('b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's')
 
         # board
         self._board_before = board_before  # game layout before move
@@ -349,7 +348,7 @@ class Move:
         self._num_wht_after = num_wht_pcs
 
         # move distance
-        self._max_dist_w_center = 18
+        self._max_dist_w_center = 17
         self._max_dist_wo_center = 3
         self._dist = 0
 
@@ -365,7 +364,7 @@ class Move:
         if self._from_square is self._to_square:
             return False
 
-        # check if center square to be moved is within rows 1-20 and columns a-t
+        # check if center square to be moved is within rows 2-19 and columns b-s
         if (''.join(col for col in self._from_square if col.isalpha()) or None) not in self._cols \
                 or (''.join(row for row in self._from_square if row.isdigit()) or None) not in self._rows:
             return False
@@ -407,7 +406,7 @@ class Move:
             elif abs(int(self._dist + 1) - self._dist) < 1 * 10 ** -12:
                 self._dist = int(self._dist + 1)
 
-        # checks if the distance between two squares is greater than the maximum of 18 on the board.
+        # checks if the distance between two squares is greater than the maximum of 17 on the board.
         if self._dist > self._max_dist_w_center:
             return False
 
@@ -669,8 +668,4 @@ class Move:
 if __name__ == "__main__":
     game = GessGame()
     game.start_gess()
-
-    # game.display_game()
-
-    # print("BLACK STARTS")
 
