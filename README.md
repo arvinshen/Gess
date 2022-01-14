@@ -20,11 +20,6 @@
 <!-- PROJECT LOGO -->
 
 <br />
-<div align="center">
-  <a href="https://github.com/arvinshen/Gess">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
-
 <h3 align="center">Gess</h3>
 
   <p align="center">
@@ -141,7 +136,7 @@ Project Link: <https://github.com/arvinshen/Gess>
 
 [license-shield]: https://img.shields.io/github/license/arvinshen/Gess.svg?style=for-the-badge
 
-[license-url]: https://github.com/arvinshen/Gess/blob/master/LICENSE.txt
+[license-url]: https://github.com/arvinshen/Gess/blob/main/LICENSE.txt
 
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 
