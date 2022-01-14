@@ -3,39 +3,12 @@
 # Description: A GessGame simulator
 
 class GessGame:
-    """
-    Remember that this project cannot be submitted late.
+    """Represents an abstract board game called Gess."""
 
-    Write a class named GessGame for playing an abstract board game called Gess.
-    Note that when a piece's move causes it to overlap stones, any stones covered by the footprint get removed,
-    not just those covered by one of the piece's stones. It is not legal to make a move that leaves you without a ring.
-    It's possible for a player to have more than one ring. A player doesn't lose until they have no remaining rings.
-
-    Locations on the board will be specified using columns labeled a-t and rows labeled 1-20,
-    with row 1 being the Black side and row 20 the White side. The actual board is only columns b-s and rows 2-19.
-    The center of the piece being moved must stay within those boundaries. An edge of the piece may go
-    into columns a or t, or rows 1 or 20, but any pieces there are removed at the end of the move. Black goes first.
-
-    There's an online implementation here you can try, but it's not 100% consistent with the rules.
-    In the case of any discrepancy between the online game and the rules, you should comply with the rules
-    (you can also ask us for clarification of course).
-    One example is that the online game lets you make moves that leave you without a ring,
-    which isn't allowed (if a player wants to end the game, they can just resign).
-    Another example is that the online game lets you choose a piece whose center is off the board
-    (in columns a or t, or in rows 1 or 20), which isn't allowed.
-
-    Your GessGame class must include the following:
-    An init method that initializes any data members.
-    A method called get_game_state that takes no parameters and returns 'UNFINISHED', 'BLACK_WON' or 'WHITE_WON'.
-    A method called resign_game that lets the current player concede the game, giving the other player the win.
-    A method called make_move that takes two parameters - strings that represent the center square of the piece being moved and the desired new location of the center square. For example, make_move('b6', 'e9'). If the indicated move is not legal for the current player, or if the game has already been won, then it should just return False. Otherwise it should make the indicated move, remove any captured stones, update the game state if necessary, update whose turn it is, and return True.
-
-    Feel free to add whatever other classes, methods, or data members you want. All data members must be private.
-    """
     def __init__(self):
         """Initializes GessGame object"""
-        self._game_state = "UNFINISHED"           # 'UNFINISHED', 'BLACK_WON' or 'WHITE_WON'
-        self._turn_state = "BLACKS_TURN"          # 'BLACKS_TURN' OR 'WHITES_TURN'
+        self._game_state = "UNFINISHED"  # 'UNFINISHED', 'BLACK_WON' or 'WHITE_WON'
+        self._turn_state = "BLACKS_TURN"  # 'BLACKS_TURN' OR 'WHITES_TURN'
         self._bound_rows = self._bound_cols = 20  # board boundary is 20x20 from rows 2-19 and columns b-s
         self._num_rows = self._num_cols = 22
         self._blk_start_pos = (("2", "c"), ("2", "e"), ("2", "g"), ("2", "h"), ("2", "i"), ("2", "j"),
@@ -58,10 +31,71 @@ class GessGame:
         self._board = self.create_board()
         self._move_count = 0
         self._move_hist = {}  # a dictionary containing the history of moves (as a Move object) made in the game
-                              # key is the move number (1, 2, 3, ..., n-2, n-1, n) and value is the move object
+        # key is the move number (1, 2, 3, ..., n-2, n-1, n) and value is the move object
+
+        self._dict_prompt = {
+            "menu": ("Gess Main Menu\nChoose from the following options:\n"
+                     "1. Display Gess Board\n2. Check Players' Turn\n3. Play Move\n4. Resign\n5. Exit\n", 5),
+            "play": ("Choose from the following options:\n"
+                     "1. New Game\n2. Exit\n", 2),
+            # "row": ("Row to be updated (1-9): ", n),
+            # "column": ("Column to be updated (1-9): ", n),
+            # "fill": ("Number to fill cell (1-9): ", n)
+        }
+
+        self._option = 5
 
     ####################################################################################################
     # Queries
+
+    def prompt(self, prompt_tuple):
+        """Prompts and validates user input"""
+        while True:
+            try:
+                prompt = prompt_tuple[0]
+                value = int(input(prompt))
+            except ValueError:
+                print("ValueError: Response must be a number\n")
+                continue
+
+            num_options = prompt_tuple[1]
+            if 0 < value <= num_options:
+                break
+            else:
+                print("Invalid: Response must be a valid number\n")
+                continue
+        return value
+
+    def prompt_move(self):
+        """Prompts for player's move"""
+        try:
+            from_square = input("Enter a square to move from (e.g. b6): ").strip().lower()
+            to_square = input("Enter a square to move to (e.g. e9): ").strip().lower()
+            # try_move = game.make_move(from_square, to_square)
+            while not self.make_move(from_square, to_square):
+                self.display_game()
+                print(self.get_turn_state().replace("_", " "))
+                print("Move not valid. Try again")
+                from_square = input("Enter a square to move from (e.g. b6): ").strip().lower()
+                to_square = input("Enter a square to move to (e.g. e9): ").strip().lower()
+        except ValueError:
+            print("Illegal move! Please try again!!")
+
+    def get_dict_prompt(self):
+        """Returns the dictionary of prompts"""
+        return self._dict_prompt
+
+    def start_gess(self):
+        """Starts the game"""
+        self.display_game()
+        print("BLACK STARTS")
+        player_input = self.prompt(self.get_dict_prompt()["menu"])
+        while player_input != self.get_option():
+            player_input = self.chosen_option(player_input)
+
+    def get_option(self):
+        """A method called get_option to get the number of options"""
+        return self._option
 
     def get_game_state(self):
         """
@@ -126,18 +160,55 @@ class GessGame:
     ####################################################################################################
     # Commands
 
+    def new_game(self):
+        """
+        A method called new_game that sets up a new game
+        :return:
+        """
+        self._game_state = "UNFINISHED"
+        self._num_blk_pcs = self._num_wht_pcs = 43  # each player starts with 43 pieces
+        self._board = self.create_board()
+        self._move_count = 0
+        self._move_hist = {}
+        self.display_game()
+
     def resign_game(self):
         """
         A method called resign_game that lets the current player concede the game, giving the other player the win.
         :return:
         """
-        if self._game_state is "BLACK_WON" or self._game_state is "WHITE_WON":
+        if self._game_state == "BLACK_WON" or self._game_state == "WHITE_WON":
             return
 
-        if self._game_state is "UNFINISHED" and self._turn_state is "BLACKS_TURN":
+        if self._game_state == "UNFINISHED" and self._turn_state == "BLACKS_TURN":
             self._game_state = "WHITE_WON"
         else:
             self._game_state = "BLACK_WON"
+        print(self.get_game_state().replace("_", " "))
+
+    def chosen_option(self, user_input):
+        """Executes chosen option from main menu and play"""
+        if self.get_game_state() == "UNFINISHED":
+            if user_input == 1:
+                self.display_game()
+            elif user_input == 2:
+                print(self.get_turn_state().replace("_", " "))
+            elif user_input == 3:
+                self.prompt_move()
+                self.display_game()
+                if self.get_game_state() != "UNFINISHED":
+                    print(self.get_game_state().replace("_", " "))
+                    return self.prompt(self.get_dict_prompt()["play"])
+                else:
+                    print(self.get_turn_state().replace("_", " "))
+            elif user_input == 4:
+                self.resign_game()
+                return self.prompt(self.get_dict_prompt()["play"])
+        elif user_input == 1:
+            self.new_game()
+        elif user_input == 2:
+            return self.get_option()
+        return self.prompt(self.get_dict_prompt()["menu"])
 
     def make_move(self, from_square, to_square):
         """
@@ -155,7 +226,7 @@ class GessGame:
         :return: True/False
         """
         # check if game has already been won
-        if self._game_state is "BLACK_WON" or self._game_state is "WHITE_WON":
+        if self._game_state == "BLACK_WON" or self._game_state == "WHITE_WON":
             return False
 
         move = Move(from_square, to_square, self._board, self._turn_state, self._num_blk_pcs, self._num_wht_pcs)
@@ -174,7 +245,7 @@ class GessGame:
         self._num_wht_pcs = move.get_num_wht_after()
 
         # update turn_state to next player
-        if self._turn_state is "BLACKS_TURN":
+        if self._turn_state == "BLACKS_TURN":
             # update game state if necessary
             if move.check_game_won() is True:
                 if move.get_player_ring() is False and move.get_opponent_ring() is True:
@@ -252,7 +323,8 @@ class Move:
 
         # board dimensions
         self._playable_area = (3, 21)  # playable board index area; inclusive [3, 21) non-inclusive
-        self._rows = ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20')
+        self._rows = (
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20')
         self._cols = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't')
 
         # board
@@ -262,8 +334,8 @@ class Move:
             self._board_after.append(list(i))
 
         # players
-        self._player = "B" if turn_state is "BLACKS_TURN" else "W"
-        self._opponent = "W" if turn_state is "BLACKS_TURN" else "B"
+        self._player = "B" if turn_state == "BLACKS_TURN" else "W"
+        self._opponent = "W" if turn_state == "BLACKS_TURN" else "B"
 
         # ring presence
         self._game_won = False
@@ -317,7 +389,8 @@ class Move:
             return False
 
         # check if to_board_index is outside of boundaries (center square can't move outside of board)
-        if self._to_board_index[0] < 3 or self._to_board_index[0] > 20 or self._to_board_index[1] < 3 or self._to_board_index[1] > 20:
+        if self._to_board_index[0] < 3 or self._to_board_index[0] > 20 or self._to_board_index[1] < 3 or self._to_board_index[
+            1] > 20:
             return False
 
         # eliminate invalid moves by calculating the distance from one square to another.
@@ -339,7 +412,8 @@ class Move:
             return False
 
         # checks if center square contains the player's piece and whether the distance is greater than 3
-        if self._board_before[self._from_board_index[0]][self._from_board_index[1]] is "-" and self._dist > self._max_dist_wo_center:
+        if self._board_before[self._from_board_index[0]][
+            self._from_board_index[1]] == "-" and self._dist > self._max_dist_wo_center:
             return False
 
         self.remove_3x3()
@@ -477,15 +551,15 @@ class Move:
         return True
 
     def check_3x3(self, row, col):
-        return (self._board_after[row][col],             # C
-                   self._board_after[row - 1][col],      # N from C
-                   self._board_after[row - 1][col + 1],  # NE from C
-                   self._board_after[row][col + 1],      # E from C
-                   self._board_after[row + 1][col + 1],  # SE from C
-                   self._board_after[row + 1][col],      # S from C
-                   self._board_after[row + 1][col - 1],  # SW from C
-                   self._board_after[row][col - 1],      # W from C
-                   self._board_after[row - 1][col - 1])  # NW from C
+        return (self._board_after[row][col],  # C
+                self._board_after[row - 1][col],  # N from C
+                self._board_after[row - 1][col + 1],  # NE from C
+                self._board_after[row][col + 1],  # E from C
+                self._board_after[row + 1][col + 1],  # SE from C
+                self._board_after[row + 1][col],  # S from C
+                self._board_after[row + 1][col - 1],  # SW from C
+                self._board_after[row][col - 1],  # W from C
+                self._board_after[row - 1][col - 1])  # NW from C
 
     ####################################################################################################
     # Commands
@@ -520,7 +594,7 @@ class Move:
         pcs_3x3 = []
         for row in range(-1, 2):
             for col in range(-1, 2):
-                if self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col] is " ":
+                if self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col] == " ":
                     pcs_3x3.append('-')
                 else:
                     pcs_3x3.append(self._board_before[self._from_board_index[0] + row][self._from_board_index[1] + col])
@@ -530,15 +604,15 @@ class Move:
         index = 0
         for row in range(-1, 2):
             for col in range(-1, 2):
-                if self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] is "B":
+                if self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] == "B":
                     self._num_blk_after -= 1
-                elif self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] is "W":
+                elif self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] == "W":
                     self._num_wht_after -= 1
-                if self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] is not " ":
+                if self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] != " ":
                     self._board_after[self._to_board_index[0] + row][self._to_board_index[1] + col] = pcs_3x3[index]
-                    if pcs_3x3[index] is "B":
+                    if pcs_3x3[index] == "B":
                         self._num_blk_after += 1
-                    elif pcs_3x3[index] is "W":
+                    elif pcs_3x3[index] == "W":
                         self._num_wht_after += 1
                 index += 1
 
@@ -584,9 +658,19 @@ class Move:
         """Removes the 3x3 pieces to be moved; Represents a player "picking up" the pieces"""
         for row in range(-1, 2):
             for col in range(-1, 2):
-                if self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is "B":
+                if self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] == "B":
                     self._num_blk_after -= 1
-                elif self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is "W":
+                elif self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] == "W":
                     self._num_wht_after -= 1
-                if self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] is not " ":
+                if self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] != " ":
                     self._board_after[self._from_board_index[0] + row][self._from_board_index[1] + col] = "-"
+
+
+if __name__ == "__main__":
+    game = GessGame()
+    game.start_gess()
+
+    # game.display_game()
+
+    # print("BLACK STARTS")
+
